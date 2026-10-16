@@ -1,0 +1,27 @@
+# OOP_Nhom07_MiniTextEditor
+
+Đề tài 7: Trình soạn thảo Văn bản Mini (Mini Text Editor) – INT1332, PTIT.
+
+## Thành viên
+| Mã | Họ tên | MSSV | Vai trò |
+|---|---|---|---|
+| TV1 | [Võ Thị Minh Thư] | [N24DCAT076] | Nhóm trưởng, tích hợp |
+| TV2 | [Họ tên] | [MSSV] | Model và File I/O |
+| TV3 | [Họ tên] | [MSSV] | Tab soạn thảo |
+| TV4 | [Họ tên] | [MSSV] | Số dòng, thanh trạng thái |
+| TV5 | [Họ tên] | [MSSV] | Tìm – Thay thế |
+| TV6 | [Họ tên] | [MSSV] | Undo/Redo, phím tắt, icon |
+| TV7 | [Họ tên] | [MSSV] | Phân tích văn bản, UML |
+| TV8 | [Họ tên] | [MSSV] | Biểu đồ JFreeChart |
+| TV9 | [Họ tên] | [MSSV] | Kiểm thử, báo cáo, BONUS |
+
+## Yêu cầu
+JDK 17, Eclipse, JFreeChart 1.5.4 (có sẵn trong thư mục lib).
+
+## Cách chạy
+- Từ Eclipse: chuột phải `Main.java` ▸ Run As ▸ Java Application.
+- Từ JAR: `java -jar OOP_Nhom07.jar`
+
+## Liên kết
+- Git: [link repo]
+- Video demo: [link nếu có]
