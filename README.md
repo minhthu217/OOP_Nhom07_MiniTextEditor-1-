@@ -10,7 +10,7 @@
 | TV3 | [Họ tên] | [MSSV] | Tab soạn thảo |
 | TV4 | [Họ tên] | [MSSV] | Số dòng, thanh trạng thái |
 | TV5 | [Họ tên] | [MSSV] | Tìm – Thay thế |
-| TV6 | [Họ tên] | [MSSV] | Undo/Redo, phím tắt, icon |
+| TV6 | [Phạm Lê Thu Thủy] | [N24DCAT078] | Undo/Redo, phím tắt, icon |
 | TV7 | [Họ tên] | [MSSV] | Phân tích văn bản, UML |
 | TV8 | [Họ tên] | [MSSV] | Biểu đồ JFreeChart |
 | TV9 | [Họ tên] | [MSSV] | Kiểm thử, báo cáo, BONUS |
