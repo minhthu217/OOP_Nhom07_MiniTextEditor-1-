@@ -5,14 +5,14 @@
 ## Thành viên
 | Mã | Họ tên | MSSV | Vai trò |
 |---|---|---|---|
-| TV1 | [Võ Thị Minh Thư] | [N24DCAT076] | Nhóm trưởng, tích hợp |
+| TV1 | Võ Thị Minh Thư | N24DCAT076 | Nhóm trưởng, tích hợp |
 | TV2 | [Họ tên] | [MSSV] | Model và File I/O |
 | TV3 | Phạm Thị Thu Thảo | N24DCAT074 | Tab soạn thảo |
 | TV4 | Lê Châu Bảo Ngọc | N24DCAT051 | Số dòng, thanh trạng thái |
 | TV5 | [Họ tên] | [MSSV] | Tìm – Thay thế |
-| TV6 | [Phạm Lê Thu Thủy] | [N24DCAT078] | Undo/Redo, phím tắt, icon |
+| TV6 | Phạm Lê Thu Thủy | N24DCAT078 | Undo/Redo, phím tắt, icon |
 | TV7 | [Họ tên] | [MSSV] | Phân tích văn bản, UML |
-| TV8 | [Kiều Võ Hương Giang] | [N24DCAT022] | Biểu đồ JFreeChart |
+| TV8 | Kiều Võ Hương Giang | N24DCAT022 | Biểu đồ JFreeChart |
 | TV9 | [Họ tên] | [MSSV] | Kiểm thử, báo cáo, BONUS |
 
 ## Yêu cầu
