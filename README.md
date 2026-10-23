@@ -9,7 +9,7 @@
 | TV2 | [Họ tên] | [MSSV] | Model và File I/O |
 | TV3 | Phạm Thị Thu Thảo | N24DCAT074 | Tab soạn thảo |
 | TV4 | Lê Châu Bảo Ngọc | N24DCAT051 | Số dòng, thanh trạng thái |
-| TV5 | [Họ tên] | [MSSV] | Tìm – Thay thế |
+| TV5 | Nguyễn Thị Thùy Quyên | N24DCAT065 | Tìm – Thay thế |
 | TV6 | Phạm Lê Thu Thủy | N24DCAT078 | Undo/Redo, phím tắt, icon |
 | TV7 | [Họ tên] | [MSSV] | Phân tích văn bản, UML |
 | TV8 | Kiều Võ Hương Giang | N24DCAT022 | Biểu đồ JFreeChart |
