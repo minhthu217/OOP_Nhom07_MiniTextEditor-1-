@@ -51,10 +51,20 @@ public class StatusBarPanel extends JPanel {
         updateLineCount();
     }
 
-    private void updatePosition() {
-        CaretPosition position = CaretPosition.from(editor);
-        positionLabel.setText(position.toString());
+        private void updatePosition() {
+    try {
+    int caretPos = editor.getCaretPosition();
+    int line = editor.getLineOfOffset(caretPos);
+    int lineStart = editor.getLineStartOffset(line);
+    int column = caretPos - lineStart;
+        positionLabel.setText(
+            "Dòng: " + (line + 1) + ", Cột: " + (column + 1)
+        );
+    } catch (javax.swing.text.BadLocationException e) {
+        positionLabel.setText("Dòng: 1, Cột: 1");
     }
+}
+    
 
     private void updateLineCount() {
         lineCountLabel.setText(
