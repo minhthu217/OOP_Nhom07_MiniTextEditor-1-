@@ -13,10 +13,6 @@ import vn.edu.ptit.oop.nhom07.util.SearchOptions;
 import vn.edu.ptit.oop.nhom07.util.TextSearcher;
 import vn.edu.ptit.oop.nhom07.util.TextSearcher.Range;
 
-/**
- * Hộp thoại Tìm – Thay thế (không modal, để vừa tìm vừa sửa văn bản).
- * Nhận Supplier để luôn thao tác trên tab đang được chọn.
- */
 public class FindReplaceDialog extends JDialog {
 
     private final Supplier<JTextComponent> editorSupplier;
@@ -38,7 +34,6 @@ public class FindReplaceDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    /** Gọi khi người dùng nhấn Ctrl+F / Ctrl+H. */
     public void showDialog() {
         JTextComponent ed = editor();
         if (ed != null && ed.getSelectedText() != null && !ed.getSelectedText().contains("\n")) {
@@ -50,11 +45,9 @@ public class FindReplaceDialog extends JDialog {
         findField.selectAll();
     }
 
-    /** Dùng cho phím F3 / Shift+F3 trong menu. */
     public void findNext()     { doFind(true); }
     public void findPrevious() { doFind(false); }
 
-    // ------------------------------------------------------------------ UI
     private void buildUi() {
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(BorderFactory.createEmptyBorder(10, 10, 4, 10));
@@ -94,10 +87,9 @@ public class FindReplaceDialog extends JDialog {
         btnReplaceAll.addActionListener(e -> doReplaceAll());
         btnCount.addActionListener(e -> doCount());
         btnClose.addActionListener(e -> setVisible(false));
-        findField.addActionListener(e -> doFind(true));     // Enter = Tìm tiếp
+        findField.addActionListener(e -> doFind(true));  
         getRootPane().setDefaultButton(btnNext);
 
-        // ESC để đóng
         getRootPane().registerKeyboardAction(e -> setVisible(false),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -108,7 +100,6 @@ public class FindReplaceDialog extends JDialog {
         add(statusLabel, BorderLayout.SOUTH);
     }
 
-    // ------------------------------------------------------------- actions
     private SearchOptions options() {
         return new SearchOptions(cbMatchCase.isSelected(), cbWholeWord.isSelected(),
                 cbRegex.isSelected(), cbWrap.isSelected());
@@ -135,7 +126,7 @@ public class FindReplaceDialog extends JDialog {
                 setStatus("Không tìm thấy \"" + q + "\".", true);
                 Toolkit.getDefaultToolkit().beep();
             } else {
-                ed.getCaret().setSelectionVisible(true);   // giữ vùng chọn hiện khi focus ở hộp thoại
+                ed.getCaret().setSelectionVisible(true); 
                 ed.select(r.start, r.end);
                 setStatus(" ", false);
             }
@@ -154,7 +145,7 @@ public class FindReplaceDialog extends JDialog {
                         s, e, replaceField.getText(), options());
                 if (rep != null) ed.replaceSelection(rep);
             }
-            doFind(true);   // nhảy sang kết quả kế tiếp
+            doFind(true);   
         } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
             setStatus("Lỗi: " + ex.getMessage(), true);
         }
@@ -189,7 +180,6 @@ public class FindReplaceDialog extends JDialog {
         }
     }
 
-    /** Thay toàn bộ nội dung nhưng vẫn đi qua Document để Undo/Redo bắt được. */
     private void replaceWholeText(JTextComponent ed, String newText) {
         try {
             if (ed.getDocument() instanceof AbstractDocument) {

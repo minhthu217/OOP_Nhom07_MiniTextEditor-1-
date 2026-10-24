@@ -1,6 +1,5 @@
 package vn.edu.ptit.oop.nhom07.util;
 
-/** Các tùy chọn tìm kiếm (bất biến). */
 public final class SearchOptions {
     private final boolean matchCase;
     private final boolean wholeWord;
