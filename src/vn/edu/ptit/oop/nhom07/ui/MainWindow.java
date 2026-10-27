@@ -1,6 +1,6 @@
 package vn.edu.ptit.oop.nhom07.ui;
 
-import java.awt.BorderLayout;
+import java.awt.BorderLayout; 
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -33,6 +33,7 @@ import vn.edu.ptit.oop.nhom07.ui.dialogs.AboutDialog;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.CloseConfirmation;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.FindReplaceDialog;
 import vn.edu.ptit.oop.nhom07.ui.panels.EditorTab;
+
 public class MainWindow extends BaseWindow {
 	
 	private JTabbedPane tabs;            // KHÔNG viết "= new ..." ở đây
@@ -57,10 +58,12 @@ public class MainWindow extends BaseWindow {
         tabFactory = new EditorTabFactory(this::closeTab);
 
         chooser = new JFileChooser();
-        chooser.setAcceptAllFileFilterUsed(false);
+        // Cho phép mở/lưu tệp với mọi phần mở rộng. Lưu ý: chỉ RTF giữ định dạng;
+        // các phần mở rộng khác được lưu dưới dạng văn bản UTF-8 thuần.
+        chooser.setAcceptAllFileFilterUsed(true);
         chooser.addChoosableFileFilter(new FileNameExtensionFilter("Văn bản thuần (*.txt)", "txt"));
         chooser.addChoosableFileFilter(new FileNameExtensionFilter("Văn bản có định dạng (*.rtf)", "rtf"));
-        chooser.setFileFilter(chooser.getChoosableFileFilters()[0]);
+        chooser.setFileFilter(chooser.getChoosableFileFilters()[1]);
 
         styleNotepadChrome();
         tabs = new JTabbedPane();
@@ -235,6 +238,15 @@ public class MainWindow extends BaseWindow {
         addCompactToolButton("≣", "Căn giữa", e -> setAlignment(javax.swing.text.StyleConstants.ALIGN_CENTER));
         addCompactToolButton("Table", "Chèn bảng dạng văn bản", e -> insertTable());
         addCompactToolButton("Print", "In tài liệu (Ctrl+P)", e -> printDocument());
+
+        // Nhãn thương hiệu màu xanh lá nhạt ở phía phải thanh công cụ.
+        toolBar.add(javax.swing.Box.createHorizontalGlue());
+        javax.swing.JLabel brandLabel = new javax.swing.JLabel("Nhóm 07 – Mini Text Editor");
+        brandLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
+        brandLabel.setForeground(new java.awt.Color(150, 185, 133));
+        brandLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 14, 0, 12));
+        brandLabel.setToolTipText("Nhóm 07 – Mini Text Editor");
+        toolBar.add(brandLabel);
     }
 
     private void addCompactToolButton(String label, String tooltip, ActionListener action) {
