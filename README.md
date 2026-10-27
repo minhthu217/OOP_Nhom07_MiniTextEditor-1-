@@ -20,8 +20,7 @@ JDK 17, Eclipse, JFreeChart 1.5.4 (có sẵn trong thư mục lib).
 
 ## Cách chạy
 - Từ Eclipse: chuột phải `Main.java` ▸ Run As ▸ Java Application.
-- Từ JAR: `java -jar OOP_Nhom07.jar`
+- Từ JAR: `java -jar OOP_Nhom07_MiniTextEditor.jar`
 
 ## Liên kết
 - Git: [link repo]
-- Video demo: [link nếu có]
