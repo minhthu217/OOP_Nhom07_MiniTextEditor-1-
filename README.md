@@ -11,9 +11,9 @@
 | TV4 | Lê Châu Bảo Ngọc | N24DCAT051 | Số dòng, thanh trạng thái |
 | TV5 | Nguyễn Thị Thùy Quyên | N24DCAT065 | Tìm – Thay thế |
 | TV6 | Phạm Lê Thu Thủy | N24DCAT078 | Undo/Redo, phím tắt, icon |
-| TV7 | [Họ tên] | [MSSV] | Phân tích văn bản, UML |
+| TV7 | Đỗ Thanh Chi | N24DCAT011 | Phân tích văn bản, UML |
 | TV8 | Kiều Võ Hương Giang | N24DCAT022 | Biểu đồ JFreeChart |
-| TV9 | [Họ tên] | [MSSV] | Kiểm thử, báo cáo, BONUS |
+| TV9 | Nguyễn Thị Trà My | N24DCAT049 | Kiểm thử, báo cáo, BONUS |
 
 ## Yêu cầu
 JDK 17, Eclipse, JFreeChart 1.5.4 (có sẵn trong thư mục lib).
