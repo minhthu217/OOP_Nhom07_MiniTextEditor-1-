@@ -23,4 +23,4 @@ JDK 17, Eclipse, JFreeChart 1.5.4 (có sẵn trong thư mục lib).
 - Từ JAR: `java -jar OOP_Nhom07_MiniTextEditor.jar`
 
 ## Liên kết
-- Git: [link repo]
+- Git:(https://github.com/minhthu217/OOP_Nhom07_MiniTextEditor-1-.git)
