@@ -1,6 +1,6 @@
 package vn.edu.ptit.oop.nhom07.model;
 
-import java.nio.charset.Charset;
+import java.nio.charset.Charset; 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
@@ -47,6 +47,9 @@ public class DocumentModel {
 	public boolean isModified() {
 		return modified;
 	}
+
+    /** Đánh dấu thay đổi định dạng kể cả khi nội dung chữ không đổi. */
+    public void markModified() { modified = true; }
 
 	public Path getFilePath() {
 		return filePath;

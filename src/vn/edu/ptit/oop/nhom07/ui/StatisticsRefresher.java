@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-import javax.swing.JTextArea;
+import javax.swing.text.JTextComponent;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.event.ChangeListener;
@@ -18,7 +18,7 @@ import vn.edu.ptit.oop.nhom07.ui.panels.EditorTab;
 
 public class StatisticsRefresher {
 
-    private static final int DEBOUNCE_MS = 300;
+	private static final int DEBOUNCE_MS = 300;
 
     private record Result(Map<String, Integer> words, Map<String, Integer> chars) { }
 
@@ -35,7 +35,7 @@ public class StatisticsRefresher {
     };
     private final ChangeListener tabListener = e -> { rebind(); refreshNow(); };
 
-    private JTextArea watched;     
+    private JTextComponent watched;     
     private int generation;        
     private boolean stopped;
 

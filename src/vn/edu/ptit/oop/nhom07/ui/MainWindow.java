@@ -11,9 +11,15 @@ import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.JFileChooser;
+import javax.swing.JComboBox;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.JOptionPane;
+import javax.swing.JMenu;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.text.JTextComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingWorker;
@@ -25,8 +31,8 @@ import vn.edu.ptit.oop.nhom07.model.DocumentModel;
 import vn.edu.ptit.oop.nhom07.service.FileService;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.AboutDialog;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.CloseConfirmation;
+import vn.edu.ptit.oop.nhom07.ui.dialogs.FindReplaceDialog;
 import vn.edu.ptit.oop.nhom07.ui.panels.EditorTab;
-
 public class MainWindow extends BaseWindow {
 	
 	private JTabbedPane tabs;            // KHÔNG viết "= new ..." ở đây
@@ -34,6 +40,12 @@ public class MainWindow extends BaseWindow {
     private EditorTabFactory tabFactory;
     private JFileChooser chooser;
     private StatisticsWindow statsWindow; //Kiều Giang
+    private JMenu editMenu;
+    private FindReplaceDialog findReplaceDialog;
+    private boolean darkTheme = false;
+    private boolean wordWrap = false;
+    private JComboBox<String> fontCombo;
+    private JComboBox<Integer> fontSizeCombo;
     
     public MainWindow() {
         super("Nhóm 07 – Mini Text Editor", 1100, 700);
@@ -45,13 +57,19 @@ public class MainWindow extends BaseWindow {
         tabFactory = new EditorTabFactory(this::closeTab);
 
         chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter("Tệp văn bản (*.txt)", "txt"));
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Văn bản thuần (*.txt)", "txt"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Văn bản có định dạng (*.rtf)", "rtf"));
+        chooser.setFileFilter(chooser.getChoosableFileFilters()[0]);
 
+        styleNotepadChrome();
         tabs = new JTabbedPane();
+        tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         tabs.addChangeListener(e -> onTabChanged());
         add(tabs, BorderLayout.CENTER);
 
         buildFileMenu();
+        buildEditMenu();
         buildToolBar();
 
         // Tự quyết định có đóng hay không (hỏi Lưu / Không lưu / Hủy)
@@ -66,6 +84,18 @@ public class MainWindow extends BaseWindow {
             }
         });
         
+        JCheckBoxMenuItem wrapItem = new JCheckBoxMenuItem("Word Wrap");
+        wrapItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.ALT_DOWN_MASK));
+        wrapItem.addActionListener(e -> { wordWrap = wrapItem.isSelected(); applyEditorSettings(); setStatus(wordWrap ? "Tự động xuống dòng: Bật" : "Tự động xuống dòng: Tắt"); });
+        viewMenu.add(wrapItem);
+        JCheckBoxMenuItem darkItem = new JCheckBoxMenuItem("Dark theme");
+        darkItem.addActionListener(e -> { darkTheme = darkItem.isSelected(); applyEditorSettings(); });
+        viewMenu.add(darkItem);
+        viewMenu.addSeparator();
+        viewMenu.add(menuItem("Phóng to chữ", KeyEvent.VK_PLUS, InputEvent.CTRL_DOWN_MASK, e -> changeFontSize(1)));
+        viewMenu.add(menuItem("Thu nhỏ chữ", KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK, e -> changeFontSize(-1)));
+        viewMenu.add(menuItem("Cỡ chữ mặc định", KeyEvent.VK_0, InputEvent.CTRL_DOWN_MASK, e -> resetFontSize()));
+        viewMenu.addSeparator();
         viewMenu.add(menuItem("Thống kê & biểu đồ", KeyEvent.VK_T,  //Kiều Giang
                 InputEvent.CTRL_DOWN_MASK, e -> openStatistics())); 
         newDocument();
@@ -93,11 +123,174 @@ public class MainWindow extends BaseWindow {
         return item;
     }
 
+    private void styleNotepadChrome() {
+        // Tông xanh lá Nhật (matcha/sage), dịu mắt và tối giản.
+        java.awt.Color chrome = new java.awt.Color(232, 240, 226);
+        java.awt.Color border = new java.awt.Color(198, 215, 188);
+        java.awt.Color text = new java.awt.Color(47, 68, 43);
+        menuBar.setBackground(chrome);
+        menuBar.setForeground(text);
+        menuBar.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, border));
+        toolBar.setBackground(chrome);
+        toolBar.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 8, 5, 8));
+        toolBar.setFloatable(false);
+        statusBar.setBackground(chrome);
+        statusBar.setBorder(javax.swing.BorderFactory.createMatteBorder(1, 0, 0, 0, border));
+        statusLabel.setForeground(text);
+        statusLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
+    }
+
+    private void buildEditMenu() {
+        editMenu = new JMenu("Edit");
+        editMenu.setMnemonic(KeyEvent.VK_E);
+        editMenu.add(menuItem("Undo", KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK, e -> { if (getCurrentTab() != null) getCurrentTab().getUndoManager().undo(); }));
+        editMenu.add(menuItem("Redo", KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK, e -> { if (getCurrentTab() != null) getCurrentTab().getUndoManager().redo(); }));
+        editMenu.addSeparator();
+        editMenu.add(menuItem("Cut", KeyEvent.VK_X, InputEvent.CTRL_DOWN_MASK, e -> editorAction("cut")));
+        editMenu.add(menuItem("Copy", KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK, e -> editorAction("copy")));
+        editMenu.add(menuItem("Paste", KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, e -> editorAction("paste")));
+        editMenu.add(menuItem("Delete", KeyEvent.VK_DELETE, 0, e -> { if (getCurrentTab() != null) getCurrentTab().getTextArea().replaceSelection(""); }));
+        editMenu.addSeparator();
+        editMenu.add(menuItem("Select All", KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK, e -> editorAction("selectAll")));
+        editMenu.addSeparator();
+        editMenu.add(menuItem("Find / Replace...", KeyEvent.VK_H, InputEvent.CTRL_DOWN_MASK, e -> showFindReplace()));
+        editMenu.add(menuItem("Find Next", KeyEvent.VK_F3, 0, e -> { showFindReplace(); if (findReplaceDialog != null) findReplaceDialog.findNext(); }));
+        JMenu formatMenu = new JMenu("Format");
+        formatMenu.add(menuItem("Font...", KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK, e -> chooseFont()));
+        formatMenu.add(menuItem("Bold", KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK, e -> toggleBold()));
+        formatMenu.add(menuItem("Italic", KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK, e -> toggleItalic()));
+        formatMenu.add(menuItem("Insert table...", KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK, e -> insertTable()));
+        formatMenu.addSeparator();
+        formatMenu.add(menuItem("Print...", KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK, e -> printDocument()));
+        menuBar.add(editMenu, 1);
+        menuBar.add(formatMenu, 2);
+    }
+
+    private void editorAction(String action) {
+        if (getCurrentTab() == null) return;
+        javax.swing.JTextPane area = getCurrentTab().getTextArea();
+        switch (action) {
+            case "cut": area.cut(); break;
+            case "copy": area.copy(); break;
+            case "paste": area.paste(); break;
+            case "selectAll": area.selectAll(); break;
+            default: break;
+        }
+        area.requestFocusInWindow();
+    }
+
+    private void showFindReplace() {
+        if (getCurrentTab() == null) return;
+        if (findReplaceDialog == null || !findReplaceDialog.isDisplayable())
+            findReplaceDialog = new FindReplaceDialog(this, () -> (JTextComponent) getCurrentTab().getTextArea());
+        findReplaceDialog.showDialog();
+    }
+
+    private void applyEditorSettings() {
+        for (int i = 0; i < tabs.getTabCount(); i++) {
+            EditorTab tab = (EditorTab) tabs.getComponentAt(i);
+            tab.setWordWrap(wordWrap);
+            tab.setDarkTheme(darkTheme);
+        }
+    }
+
+    private void changeFontSize(int delta) {
+        if (getCurrentTab() != null) getCurrentTab().changeFontSize(delta);
+    }
+
+    private void resetFontSize() {
+        if (getCurrentTab() != null) {
+            int current = getCurrentTab().getEditorFontSize();
+            getCurrentTab().changeFontSize(14 - current);
+        }
+    }
+
     private void buildToolBar() {
-        // Icon do TV6 chuẩn bị; thiếu icon thì BaseWindow tự dùng nút chữ
-        addToolButton("/resources/icons/new.png", "Tài liệu mới (Ctrl+N)", e -> newDocument());
-        addToolButton("/resources/icons/open.png", "Mở tệp (Ctrl+O)", e -> openDocument());
-        addToolButton("/resources/icons/save.png", "Lưu (Ctrl+S)", e -> saveCurrent());
+        // Nút chữ gọn, đồng bộ với thanh công cụ Notepad hiện đại.
+        addCompactToolButton("New", "Tài liệu mới (Ctrl+N)", e -> newDocument());
+        addCompactToolButton("Open", "Mở tệp (Ctrl+O)", e -> openDocument());
+        addCompactToolButton("Save", "Lưu (Ctrl+S)", e -> saveCurrent());
+        toolBar.addSeparator();
+        addCompactToolButton("Undo", "Hoàn tác (Ctrl+Z)", e -> { if (getCurrentTab() != null) getCurrentTab().getUndoManager().undo(); });
+        addCompactToolButton("Redo", "Làm lại (Ctrl+Y)", e -> { if (getCurrentTab() != null) getCurrentTab().getUndoManager().redo(); });
+        toolBar.addSeparator();
+        addCompactToolButton("Find", "Tìm kiếm / thay thế (Ctrl+H)", e -> showFindReplace());
+        toolBar.addSeparator();
+        fontCombo = new JComboBox<>(new String[] {"Monospaced", "Segoe UI", "Arial", "Tahoma", "Times New Roman", "Yu Gothic", "Meiryo"});
+        fontCombo.setSelectedItem("Monospaced");
+        fontCombo.setToolTipText("Chọn font chữ cho toàn bộ tài liệu");
+        fontCombo.addActionListener(e -> { if (fontCombo.getSelectedItem() != null) setFontFamily(fontCombo.getSelectedItem().toString()); });
+        toolBar.add(fontCombo);
+        fontSizeCombo = new JComboBox<>(new Integer[] {10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36});
+        fontSizeCombo.setSelectedItem(14);
+        fontSizeCombo.setToolTipText("Cỡ chữ");
+        fontSizeCombo.addActionListener(e -> { if (fontSizeCombo.getSelectedItem() != null) setFontSize((Integer) fontSizeCombo.getSelectedItem()); });
+        toolBar.add(fontSizeCombo);
+        toolBar.addSeparator();
+        addCompactToolButton("B", "In đậm phần chữ được chọn (Ctrl+B)", e -> toggleBold());
+        addCompactToolButton("I", "In nghiêng phần chữ được chọn (Ctrl+I)", e -> toggleItalic());
+        addCompactToolButton("U", "Gạch chân phần chữ được chọn", e -> { if (getCurrentTab() != null) getCurrentTab().toggleUnderline(); });
+        addCompactToolButton("A▾", "Đổi màu chữ", e -> chooseTextColor());
+        addCompactToolButton("≡", "Căn trái", e -> setAlignment(javax.swing.text.StyleConstants.ALIGN_LEFT));
+        addCompactToolButton("≣", "Căn giữa", e -> setAlignment(javax.swing.text.StyleConstants.ALIGN_CENTER));
+        addCompactToolButton("Table", "Chèn bảng dạng văn bản", e -> insertTable());
+        addCompactToolButton("Print", "In tài liệu (Ctrl+P)", e -> printDocument());
+    }
+
+    private void addCompactToolButton(String label, String tooltip, ActionListener action) {
+        javax.swing.JButton button = new javax.swing.JButton(label);
+        button.setToolTipText(tooltip);
+        button.setFocusable(false);
+        button.setFont(new java.awt.Font("Segoe UI", java.awt.Font.PLAIN, 12));
+        button.setBorder(javax.swing.BorderFactory.createEmptyBorder(6, 10, 6, 10));
+        button.setBackground(new java.awt.Color(232, 240, 226));
+        button.setForeground(new java.awt.Color(47, 68, 43));
+        button.setFocusPainted(false);
+        button.addActionListener(action);
+        toolBar.add(button);
+    }
+
+    private void chooseFont() {
+        if (getCurrentTab() == null) return;
+        String[] fonts = {"Monospaced", "Segoe UI", "Arial", "Tahoma", "Times New Roman", "Yu Gothic", "Meiryo"};
+        String selected = (String) JOptionPane.showInputDialog(this, "Chọn font chữ cho toàn bộ tài liệu:", "Font chữ", JOptionPane.PLAIN_MESSAGE, null, fonts, fontCombo == null ? fonts[0] : fontCombo.getSelectedItem());
+        if (selected != null) { if (fontCombo != null) fontCombo.setSelectedItem(selected); else setFontFamily(selected); }
+    }
+
+    private void setFontFamily(String family) {
+        if (getCurrentTab() != null) getCurrentTab().setFontFamily(family);
+    }
+
+    private void setFontSize(int size) {
+        if (getCurrentTab() != null) getCurrentTab().setEditorFontSize(size);
+    }
+
+    private void toggleBold() { if (getCurrentTab() != null) getCurrentTab().toggleBold(); }
+    private void toggleItalic() { if (getCurrentTab() != null) getCurrentTab().toggleItalic(); }
+    private void chooseTextColor() {
+        if (getCurrentTab() == null) return;
+        java.awt.Color color = javax.swing.JColorChooser.showDialog(this, "Chọn màu chữ", new java.awt.Color(47, 68, 43));
+        if (color != null) getCurrentTab().setTextColor(color);
+    }
+    private void setAlignment(int alignment) { if (getCurrentTab() != null) getCurrentTab().setAlignment(alignment); }
+
+    private void insertTable() {
+        if (getCurrentTab() == null) return;
+        JSpinner rows = new JSpinner(new SpinnerNumberModel(3, 1, 20, 1));
+        JSpinner cols = new JSpinner(new SpinnerNumberModel(3, 1, 10, 1));
+        javax.swing.JPanel panel = new javax.swing.JPanel(new java.awt.GridLayout(2, 2, 8, 8));
+        panel.add(new javax.swing.JLabel("Số hàng:")); panel.add(rows);
+        panel.add(new javax.swing.JLabel("Số cột:")); panel.add(cols);
+        if (JOptionPane.showConfirmDialog(this, panel, "Chèn bảng dạng văn bản", JOptionPane.OK_CANCEL_OPTION) != JOptionPane.OK_OPTION) return;
+        int r = (Integer) rows.getValue(), c = (Integer) cols.getValue();
+        getCurrentTab().insertTextTable(r, c);
+        getCurrentTab().getTextArea().requestFocusInWindow();
+    }
+
+    private void printDocument() {
+        if (getCurrentTab() == null) return;
+        try { getCurrentTab().getTextArea().print(); }
+        catch (java.awt.print.PrinterException ex) { JOptionPane.showMessageDialog(this, "Không thể in tài liệu: " + ex.getMessage(), "Lỗi in", JOptionPane.ERROR_MESSAGE); }
     }
 
     // ------------------------------------------------------------------ API công khai cho TV3/4/5/6/8
@@ -175,7 +368,7 @@ public class MainWindow extends BaseWindow {
         Path path = chooser.getSelectedFile().toPath();
         String name = path.getFileName().toString();
         if (!name.contains(".")) {
-            path = path.resolveSibling(name + ".txt");       // tự thêm đuôi .txt
+            path = path.resolveSibling(name + ".txt");
         }
         if (Files.exists(path)) {
             int ok = JOptionPane.showConfirmDialog(this,
@@ -188,11 +381,19 @@ public class MainWindow extends BaseWindow {
 
     private boolean writeTo(EditorTab tab, Path path) {
         try {
-            fileService.write(tab.getDocumentModel(), path);  // markSaved() chỉ gọi khi ghi thành công
+            if (path.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(".rtf")) {
+                tab.saveRtf(path);
+            } else {
+                tab.getDocumentModel().setContent(tab.getTextArea().getText());
+                fileService.write(tab.getDocumentModel(), path);
+            }
             refreshTitle(tab);
             setStatus("Đã lưu " + path.getFileName());
             return true;
         } catch (DocumentIOException ex) {
+            showError(ex);
+            return false;
+        } catch (java.io.IOException ex) {
             showError(ex);
             return false;
         }
@@ -240,6 +441,18 @@ public class MainWindow extends BaseWindow {
         tab.addPropertyChangeListener("modified", e -> refreshTitle(tab));
         // TODO(TV3): nếu dùng TabHeader (setTabComponentAt) thì gắn tại đây
         tab.getTextArea().requestFocusInWindow();
+        tab.setWordWrap(wordWrap);
+        tab.setDarkTheme(darkTheme);
+        tab.getTextArea().addCaretListener(e -> {
+            int pos = e.getDot();
+            try {
+                String beforeCaret = tab.getTextArea().getDocument().getText(0, pos);
+                int line = 1, lastBreak = -1;
+                for (int j = 0; j < beforeCaret.length(); j++) if (beforeCaret.charAt(j) == '\n') { line++; lastBreak = j; }
+                int col = pos - lastBreak;
+                setStatus("Ln " + line + ", Col " + col + "     " + tab.getDocumentModel().getDisplayName());
+            } catch (javax.swing.text.BadLocationException ignored) { }
+        });
     }
 
     private String tabTitle(EditorTab tab) {
