@@ -6,7 +6,7 @@
 | Mã | Họ tên | MSSV | Vai trò |
 |---|---|---|---|
 | TV1 | Võ Thị Minh Thư | N24DCAT076 | Nhóm trưởng, tích hợp |
-| TV2 | [Họ tên] | [MSSV] | Model và File I/O |
+  | TV2 | Võ Thị Hồng Hưng | N24DCAT032 | Model và File I/O |
 | TV3 | Phạm Thị Thu Thảo | N24DCAT074 | Tab soạn thảo |
 | TV4 | Lê Châu Bảo Ngọc | N24DCAT051 | Số dòng, thanh trạng thái |
 | TV5 | Nguyễn Thị Thùy Quyên | N24DCAT065 | Tìm – Thay thế |
