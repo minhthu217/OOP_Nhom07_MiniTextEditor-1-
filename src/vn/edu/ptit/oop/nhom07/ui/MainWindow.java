@@ -26,19 +26,15 @@ import vn.edu.ptit.oop.nhom07.service.FileService;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.AboutDialog;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.CloseConfirmation;
 import vn.edu.ptit.oop.nhom07.ui.panels.EditorTab;
-/**
- * Cửa sổ chính: JTabbedPane chứa nhiều EditorTab, menu File, toolbar, xử lý đóng khi chưa lưu.
- *
- * LƯU Ý: constructor của BaseWindow gọi initUI() khi constructor của lớp này CHƯA chạy xong,
- * nên các field bên dưới KHÔNG được gán giá trị tại chỗ khai báo — mọi khởi tạo nằm trong initUI().
- */
+
 public class MainWindow extends BaseWindow {
 	
 	private JTabbedPane tabs;            // KHÔNG viết "= new ..." ở đây
     private FileService fileService;
     private EditorTabFactory tabFactory;
     private JFileChooser chooser;
-
+    private StatisticsWindow statsWindow; //Kiều Giang
+    
     public MainWindow() {
         super("Nhóm 07 – Mini Text Editor", 1100, 700);
     }
@@ -46,7 +42,7 @@ public class MainWindow extends BaseWindow {
     @Override
     protected void initUI() {
         fileService = new FileService();
-        tabFactory = new EditorTabFactory();
+        tabFactory = new EditorTabFactory(this::closeTab);
 
         chooser = new JFileChooser();
         chooser.setFileFilter(new FileNameExtensionFilter("Tệp văn bản (*.txt)", "txt"));
@@ -69,7 +65,9 @@ public class MainWindow extends BaseWindow {
                 }
             }
         });
-
+        
+        viewMenu.add(menuItem("Thống kê & biểu đồ", KeyEvent.VK_T,  //Kiều Giang
+                InputEvent.CTRL_DOWN_MASK, e -> openStatistics())); 
         newDocument();
         setStatus("Sẵn sàng");
     }
@@ -116,7 +114,7 @@ public class MainWindow extends BaseWindow {
     // ------------------------------------------------------------------ New / Open
 
     public void newDocument() {
-        addTab(tabFactory.createEmpty());
+        addTab(tabFactory.createNew());
         setStatus("Đã tạo tài liệu mới");
     }
 
@@ -267,5 +265,15 @@ public class MainWindow extends BaseWindow {
     protected void showAbout() {
         new AboutDialog(this).setVisible(true);              // gọi đa hình từ menu Help ▸ About
     }
-
+    
+    public void openStatistics() {
+        if (statsWindow == null || !statsWindow.isDisplayable()) {
+            statsWindow = new StatisticsWindow(this);
+            new StatisticsRefresher(this, statsWindow,
+                    text -> /* TV7: trả về Map từ -> số lần */ null,
+                    text -> /* TV7: trả về Map nhóm ký tự -> số ký tự */ null).start();
+        }
+        statsWindow.setVisible(true);
+        statsWindow.toFront();
+    }
 }

@@ -1,8 +1,13 @@
 package vn.edu.ptit.oop.nhom07.LineNumberPanel;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class LineNumberPanel extends JPanel {
     private final JTextArea editor;

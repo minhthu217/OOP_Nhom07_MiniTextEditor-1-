@@ -1,8 +1,13 @@
 package vn.edu.ptit.oop.nhom07.StatusBarPanel;
 
-import javax.swing.*;
-import javax.swing.event.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class StatusBarPanel extends JPanel {
     private static final long serialVersionUID = 1L;

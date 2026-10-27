@@ -2,6 +2,7 @@ package vn.edu.ptit.oop.nhom07.ui;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
+
 import javax.swing.JTabbedPane;
 
 import vn.edu.ptit.oop.nhom07.model.DocumentModel;

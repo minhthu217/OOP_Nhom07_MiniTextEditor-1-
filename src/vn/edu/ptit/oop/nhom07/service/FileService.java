@@ -1,12 +1,12 @@
-package service;
+package vn.edu.ptit.oop.nhom07.service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import exception.DocumentIOException;
-import model.DocumentModel;
+import vn.edu.ptit.oop.nhom07.exception.DocumentIOException;
+import vn.edu.ptit.oop.nhom07.model.DocumentModel;
 
 public class FileService {
 

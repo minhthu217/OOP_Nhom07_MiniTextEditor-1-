@@ -1,23 +1,24 @@
 package vn.edu.ptit.oop.nhom07.ui.panels;
 
 import java.awt.BorderLayout;
+
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import vn.edu.ptit.oop.nhom07.model.DocumentModel;
-import vn.edu.ptit.oop.nhom07.service.UndoRedoManager;
 // TODO: sửa import cho khớp package thật của TV4 (xem mục 5)
 import vn.edu.ptit.oop.nhom07.LineNumberPanel.LineNumberPanel;
+import vn.edu.ptit.oop.nhom07.model.DocumentModel;
+import vn.edu.ptit.oop.nhom07.service.UndoRedoManager;
 
 /** Một tab soạn thảo: chứa (composition) vùng soạn thảo, số dòng, model và bộ undo. */
 public class EditorTab extends JPanel {
 
-    private final JTextArea textArea = new JTextArea();
+	private final JTextArea textArea = new JTextArea();
     private final DocumentModel model;
-    private final UndoRedoManager undo = new UndoRedoManager();
+    private final UndoRedoManager undo;
     private boolean lastModified;   // nhớ trạng thái cũ để chỉ báo khi thật sự đổi
 
     public EditorTab(DocumentModel model, String initialText) {
@@ -36,7 +37,7 @@ public class EditorTab extends JPanel {
         scroll.setRowHeaderView(new LineNumberPanel(textArea));
         add(scroll, BorderLayout.CENTER);
 
-        undo.attachTo(textArea.getDocument());       // sau setText => không undo được việc nạp file
+        undo = new UndoRedoManager(textArea.getDocument());   // tạo sau setText => không undo được việc nạp file
         lastModified = model.isModified();
 
         textArea.getDocument().addDocumentListener(new DocumentListener() {

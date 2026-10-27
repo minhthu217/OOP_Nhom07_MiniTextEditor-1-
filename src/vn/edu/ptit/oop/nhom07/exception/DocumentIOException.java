@@ -1,4 +1,4 @@
-package exception;
+package vn.edu.ptit.oop.nhom07.exception;
 
 import java.nio.file.Path;
 

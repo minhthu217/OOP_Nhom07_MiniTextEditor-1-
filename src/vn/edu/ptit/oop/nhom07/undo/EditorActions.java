@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
+import vn.edu.ptit.oop.nhom07.service.UndoRedoManager;
+
 public final class EditorActions {
 
     private UndoRedoManager currentManager;
