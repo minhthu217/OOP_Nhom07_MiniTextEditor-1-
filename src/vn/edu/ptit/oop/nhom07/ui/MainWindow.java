@@ -1,6 +1,10 @@
 package vn.edu.ptit.oop.nhom07.ui;
 
+
 import java.awt.BorderLayout; 
+
+import java.awt.BorderLayout;
+
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -34,6 +38,16 @@ import vn.edu.ptit.oop.nhom07.ui.dialogs.CloseConfirmation;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.FindReplaceDialog;
 import vn.edu.ptit.oop.nhom07.ui.panels.EditorTab;
 
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.util.List;
+import javax.swing.JCheckBoxMenuItem;
+
+import vn.edu.ptit.oop.nhom07.service.RecentFilesManager;
+
 public class MainWindow extends BaseWindow {
 	
 	private JTabbedPane tabs;            // KHÔNG viết "= new ..." ở đây
@@ -45,11 +59,14 @@ public class MainWindow extends BaseWindow {
     private FindReplaceDialog findReplaceDialog;
     private boolean darkTheme = false;
     private boolean wordWrap = false;
+    private boolean syntaxHighlight = false; // My
     private JComboBox<String> fontCombo;
     private JComboBox<Integer> fontSizeCombo;
+    private RecentFilesManager recent; // My
+    private JMenu recentMenu;
     
     public MainWindow() {
-        super("Nhóm 07 – Mini Text Editor", 1100, 700);
+        super("Mini Text Editor", 1100, 700);
     }
 
     @Override
@@ -71,6 +88,7 @@ public class MainWindow extends BaseWindow {
         tabs.addChangeListener(e -> onTabChanged());
         add(tabs, BorderLayout.CENTER);
 
+        recent = new RecentFilesManager();
         buildFileMenu();
         buildEditMenu();
         buildToolBar();
@@ -94,6 +112,13 @@ public class MainWindow extends BaseWindow {
         JCheckBoxMenuItem darkItem = new JCheckBoxMenuItem("Dark theme");
         darkItem.addActionListener(e -> { darkTheme = darkItem.isSelected(); applyEditorSettings(); });
         viewMenu.add(darkItem);
+        JCheckBoxMenuItem syntaxItem = new JCheckBoxMenuItem("Tô màu từ khóa Java");
+        syntaxItem.addActionListener(e -> {
+            syntaxHighlight = syntaxItem.isSelected();
+            applyEditorSettings();
+            setStatus(syntaxHighlight ? "Tô màu từ khóa Java: Bật" : "Tô màu từ khóa Java: Tắt");
+        });
+        viewMenu.add(syntaxItem);
         viewMenu.addSeparator();
         viewMenu.add(menuItem("Phóng to chữ", KeyEvent.VK_PLUS, InputEvent.CTRL_DOWN_MASK, e -> changeFontSize(1)));
         viewMenu.add(menuItem("Thu nhỏ chữ", KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK, e -> changeFontSize(-1)));
@@ -116,6 +141,9 @@ public class MainWindow extends BaseWindow {
         fileMenu.insert(menuItem("Save As...", KeyEvent.VK_S,
                 InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK, e -> saveCurrentAs()), pos++);
         fileMenu.insert(menuItem("Close Tab", KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK, e -> closeCurrentTab()), pos++);
+        recentMenu = new JMenu("Recent Files");
+        fileMenu.insert(recentMenu, pos++);
+        refreshRecentMenu();
         fileMenu.insertSeparator(pos);
     }
 
@@ -194,6 +222,7 @@ public class MainWindow extends BaseWindow {
             EditorTab tab = (EditorTab) tabs.getComponentAt(i);
             tab.setWordWrap(wordWrap);
             tab.setDarkTheme(darkTheme);
+            tab.setSyntaxHighlight(syntaxHighlight);
         }
     }
 
@@ -241,12 +270,6 @@ public class MainWindow extends BaseWindow {
 
         // Nhãn thương hiệu màu xanh lá nhạt ở phía phải thanh công cụ.
         toolBar.add(javax.swing.Box.createHorizontalGlue());
-        javax.swing.JLabel brandLabel = new javax.swing.JLabel("Nhóm 07 – Mini Text Editor");
-        brandLabel.setFont(new java.awt.Font("Segoe UI", java.awt.Font.BOLD, 13));
-        brandLabel.setForeground(new java.awt.Color(150, 185, 133));
-        brandLabel.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 14, 0, 12));
-        brandLabel.setToolTipText("Nhóm 07 – Mini Text Editor");
-        toolBar.add(brandLabel);
     }
 
     private void addCompactToolButton(String label, String tooltip, ActionListener action) {
@@ -348,6 +371,8 @@ public class MainWindow extends BaseWindow {
             protected void done() {                          // chạy trên EDT
                 try {
                     addTab(tabFactory.createFromFile(path, get()));
+                    recent.add(path);
+                    refreshRecentMenu();
                     setStatus("Đã mở " + path.getFileName());
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
@@ -391,25 +416,36 @@ public class MainWindow extends BaseWindow {
         return writeTo(tab, path);
     }
 
+
     private boolean writeTo(EditorTab tab, Path path) {
-        try {
-            if (path.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(".rtf")) {
-                tab.saveRtf(path);
-            } else {
-                tab.getDocumentModel().setContent(tab.getTextArea().getText());
-                fileService.write(tab.getDocumentModel(), path);
-            }
-            refreshTitle(tab);
-            setStatus("Đã lưu " + path.getFileName());
-            return true;
-        } catch (DocumentIOException ex) {
-            showError(ex);
-            return false;
-        } catch (java.io.IOException ex) {
-            showError(ex);
-            return false;
-        }
-    }
+    	try {
+    		if (path.getFileName().toString()
+    				.toLowerCase(java.util.Locale.ROOT)
+    				.endsWith(".rtf")) {
+    			tab.saveRtf(path);
+    		} else {
+    			tab.getDocumentModel()
+    			.setContent(tab.getTextArea().getText());
+
+    			fileService.write(tab.getDocumentModel(), path);
+    		}
+
+    		recent.add(path);
+    		refreshRecentMenu();
+
+    		refreshTitle(tab);
+    		setStatus("Đã lưu " + path.getFileName());
+    		return true;
+
+    	} catch (DocumentIOException ex) {
+    		showError(ex);
+    		return false;
+    	} catch (java.io.IOException ex) {
+    		showError(ex);
+    		return false;
+    	}
+}
+
 
     // ------------------------------------------------------------------ Close tab / thoát
 
@@ -455,6 +491,7 @@ public class MainWindow extends BaseWindow {
         tab.getTextArea().requestFocusInWindow();
         tab.setWordWrap(wordWrap);
         tab.setDarkTheme(darkTheme);
+        tab.setSyntaxHighlight(syntaxHighlight);
         tab.getTextArea().addCaretListener(e -> {
             int pos = e.getDot();
             try {
@@ -485,7 +522,7 @@ public class MainWindow extends BaseWindow {
     private void showError(Throwable cause) {
         JOptionPane.showMessageDialog(this, cause.getMessage(), "Lỗi tệp", JOptionPane.ERROR_MESSAGE);
     }
-
+    
     @Override
     protected void showAbout() {
         new AboutDialog(this).setVisible(true);              // gọi đa hình từ menu Help ▸ About
@@ -495,10 +532,95 @@ public class MainWindow extends BaseWindow {
         if (statsWindow == null || !statsWindow.isDisplayable()) {
             statsWindow = new StatisticsWindow(this);
             new StatisticsRefresher(this, statsWindow,
-                    text -> /* TV7: trả về Map từ -> số lần */ null,
-                    text -> /* TV7: trả về Map nhóm ký tự -> số ký tự */ null).start();
+                    MainWindow::countWordFrequency,
+                    MainWindow::countCharacterCategories).start();
         }
         statsWindow.setVisible(true);
         statsWindow.toFront();
     }
+    
+    /**
+     * Đếm tần suất từ trong văn bản, không phân biệt chữ hoa/chữ thường.
+     */
+    private static java.util.Map<String, Integer> countWordFrequency(String text) {
+        java.util.Map<String, Integer> frequencies = new java.util.TreeMap<>();
+        if (text == null || text.isBlank()) {
+            return frequencies;
+        }
+
+        java.util.regex.Matcher matcher =
+                java.util.regex.Pattern.compile("[\\p{L}\\p{N}_]+")
+                        .matcher(text.toLowerCase(java.util.Locale.ROOT));
+        while (matcher.find()) {
+            String word = matcher.group();
+            frequencies.merge(word, 1, Integer::sum);
+        }
+        return frequencies;
+    }
+
+    /**
+     * Phân loại ký tự để hiển thị biểu đồ tỷ lệ.
+     */
+    private static java.util.Map<String, Integer> countCharacterCategories(String text) {
+        java.util.Map<String, Integer> categories = new java.util.LinkedHashMap<>();
+        categories.put("Chữ cái", 0);
+        categories.put("Chữ số", 0);
+        categories.put("Khoảng trắng", 0);
+        categories.put("Ký tự khác", 0);
+
+        if (text == null || text.isEmpty()) {
+            return categories;
+        }
+
+        text.codePoints().forEach(codePoint -> {
+            if (Character.isLetter(codePoint)) {
+                categories.merge("Chữ cái", 1, Integer::sum);
+            } else if (Character.isDigit(codePoint)) {
+                categories.merge("Chữ số", 1, Integer::sum);
+            } else if (Character.isWhitespace(codePoint)) {
+                categories.merge("Khoảng trắng", 1, Integer::sum);
+            } else {
+                categories.merge("Ký tự khác", 1, Integer::sum);
+            }
+        });
+
+        categories.entrySet().removeIf(entry -> entry.getValue() == 0);
+        return categories;
+    }
+
+    private void refreshRecentMenu() {
+        recentMenu.removeAll();
+        List<Path> list = recent.getFiles();               // import java.util.List
+        if (list.isEmpty()) {
+            JMenuItem empty = new JMenuItem("(Trống)");
+            empty.setEnabled(false);
+            recentMenu.add(empty);
+            return;
+        }
+        int n = 1;
+        for (Path p : list) {
+            JMenuItem item = new JMenuItem((n++) + ". " + p.getFileName());
+            item.setToolTipText(p.toString());
+            item.addActionListener(e -> openRecent(p));
+            recentMenu.add(item);
+        }
+        recentMenu.addSeparator();
+        JMenuItem clear = new JMenuItem("Xóa danh sách");
+        clear.addActionListener(e -> { recent.clear(); refreshRecentMenu(); });
+        recentMenu.add(clear);
+    }
+
+    private void openRecent(Path p) {
+        if (!Files.exists(p)) {                            // tệp đã bị xóa/di chuyển
+            JOptionPane.showMessageDialog(this, "Tệp không còn tồn tại:\n" + p,
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            recent.remove(p);
+            refreshRecentMenu();
+            return;
+        }
+        openPath(p);
+    }
 }
+
+
+    
