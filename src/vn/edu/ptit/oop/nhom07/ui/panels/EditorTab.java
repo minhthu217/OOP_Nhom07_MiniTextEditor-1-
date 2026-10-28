@@ -117,10 +117,23 @@ public class EditorTab extends JPanel {
 	        darkTheme = enabled;
 	        Color bg = enabled ? new Color(36,42,36) : new Color(250,252,247);
 	        Color fg = enabled ? new Color(230,236,226) : new Color(43,57,40);
-	        textArea.setBackground(bg); textArea.setForeground(fg); textArea.setCaretColor(fg);
-	        // Xanh matcha đậm + chữ trắng để vùng được chọn dễ nhận biết.
-	        textArea.setSelectionColor(enabled ? new Color(25, 35, 23) : new Color(25, 35, 23));
-	        textArea.setSelectedTextColor(Color.WHITE);
+	        textArea.setBackground(bg);
+	        textArea.setForeground(fg);
+	        textArea.setCaretColor(fg);
+
+	        // JTextPane stores per-character foreground colors in its StyledDocument.
+	        // Update existing text as well as the insertion attributes for future typing.
+	        StyledDocument document = textArea.getStyledDocument();
+	        SimpleAttributeSet defaultTextColor = new SimpleAttributeSet();
+	        StyleConstants.setForeground(defaultTextColor, fg);
+	        if (document.getLength() > 0) {
+	            document.setCharacterAttributes(0, document.getLength(), defaultTextColor, false);
+	        }
+	        textArea.setCharacterAttributes(defaultTextColor, false);
+
+	        // Keep the selected text readable in both themes.
+	        textArea.setSelectionColor(enabled ? new Color(70, 85, 70) : new Color(190, 215, 180));
+	        textArea.setSelectedTextColor(enabled ? Color.WHITE : new Color(30, 45, 28));
 	        if (getComponentCount() > 0 && getComponent(0) instanceof JScrollPane) {
 	            JScrollPane pane = (JScrollPane)getComponent(0);
 	            pane.getViewport().setBackground(bg); pane.setBackground(bg);
