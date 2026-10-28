@@ -1,27 +1,12 @@
 package vn.edu.ptit.oop.nhom07.ui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.Toolkit;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.util.function.Supplier;
 import java.util.regex.PatternSyntaxException;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
@@ -32,7 +17,12 @@ import vn.edu.ptit.oop.nhom07.util.TextSearcher.Range;
 
 public class FindReplaceDialog extends JDialog {
 
+    private static final Color FOUND_BG = new Color(0xFF, 0xEB, 0x3B);
+    private static final Color FOUND_FG = Color.BLACK;
+
     private final Supplier<JTextComponent> editorSupplier;
+    private JTextComponent styledEditor;   
+    private Color oldSelBg, oldSelFg;      
 
     private final JTextField findField = new JTextField(24);
     private final JTextField replaceField = new JTextField(24);
@@ -107,6 +97,10 @@ public class FindReplaceDialog extends JDialog {
         findField.addActionListener(e -> doFind(true));  
         getRootPane().setDefaultButton(btnNext);
 
+        addComponentListener(new ComponentAdapter() {
+            @Override public void componentHidden(ComponentEvent e) { restoreSelectionStyle(); }
+        });
+
         getRootPane().registerKeyboardAction(e -> setVisible(false),
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                 JComponent.WHEN_IN_FOCUSED_WINDOW);
@@ -143,8 +137,7 @@ public class FindReplaceDialog extends JDialog {
                 setStatus("Không tìm thấy \"" + q + "\".", true);
                 Toolkit.getDefaultToolkit().beep();
             } else {
-                ed.getCaret().setSelectionVisible(true); 
-                ed.select(r.start, r.end);
+                markFound(ed, r);
                 setStatus(" ", false);
             }
         } catch (PatternSyntaxException ex) {
@@ -162,7 +155,7 @@ public class FindReplaceDialog extends JDialog {
                         s, e, replaceField.getText(), options());
                 if (rep != null) ed.replaceSelection(rep);
             }
-            doFind(true);   
+            doFind(true);
         } catch (IllegalArgumentException | IndexOutOfBoundsException ex) {
             setStatus("Lỗi: " + ex.getMessage(), true);
         }
@@ -207,6 +200,27 @@ public class FindReplaceDialog extends JDialog {
             }
         } catch (BadLocationException ex) {
             ed.setText(newText);
+        }
+    }
+
+    private void markFound(JTextComponent ed, Range r) {
+        if (styledEditor != ed) {           
+            restoreSelectionStyle();
+            styledEditor = ed;
+            oldSelBg = ed.getSelectionColor();
+            oldSelFg = ed.getSelectedTextColor();
+        }
+        ed.setSelectionColor(FOUND_BG);
+        ed.setSelectedTextColor(FOUND_FG);
+        ed.getCaret().setSelectionVisible(true);   
+        ed.select(r.start, r.end);
+    }
+
+    private void restoreSelectionStyle() {
+        if (styledEditor != null) {
+            styledEditor.setSelectionColor(oldSelBg);
+            styledEditor.setSelectedTextColor(oldSelFg);
+            styledEditor = null;
         }
     }
 
