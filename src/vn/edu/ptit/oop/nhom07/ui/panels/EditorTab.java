@@ -25,11 +25,15 @@ import javax.swing.event.DocumentListener;
 import vn.edu.ptit.oop.nhom07.LineNumberPanel.LineNumberPanel;
 import vn.edu.ptit.oop.nhom07.model.DocumentModel;
 import vn.edu.ptit.oop.nhom07.service.UndoRedoManager;
+import vn.edu.ptit.oop.nhom07.util.KeywordHighlighter;
+
 /** Một tab soạn thảo: chứa (composition) vùng soạn thảo, số dòng, model và bộ undo. */
 public class EditorTab extends JPanel {
 
-	 private final JTextPane textArea = new JTextPane();
-	    private final DocumentModel model;
+    private final JTextPane textArea = new JTextPane();
+    private final DocumentModel model;
+    private final LineNumberPanel lineNumbers;
+    private final KeywordHighlighter highlighter;
 	    private final UndoRedoManager undo;
 	    private boolean lastModified;
 	    private boolean darkTheme = false;
@@ -38,20 +42,51 @@ public class EditorTab extends JPanel {
 
 	    public EditorTab(DocumentModel model, String initialText) {
 	        super(new BorderLayout());
-	        if (model == null) throw new IllegalArgumentException("DocumentModel không được null");
+
+	        if (model == null) {
+	            throw new IllegalArgumentException(
+	                "DocumentModel không được null"
+	            );
+	        }
+
 	        this.model = model;
-	        textArea.setFont(new Font(editorFontFamily, Font.PLAIN, editorFontSize));
+
+	        textArea.setFont(
+	            new Font(editorFontFamily, Font.PLAIN, editorFontSize)
+	        );
 	        textArea.setMargin(new java.awt.Insets(10, 12, 10, 12));
 	        textArea.setText(initialText == null ? "" : initialText);
+
 	        JScrollPane scroll = new JScrollPane(textArea);
-	        scroll.setRowHeaderView(new LineNumberPanel(textArea));
+
+	        lineNumbers = new LineNumberPanel(textArea);
+	        scroll.setRowHeaderView(lineNumbers);
+
 	        add(scroll, BorderLayout.CENTER);
+
+	        // Khởi tạo bộ Undo/Redo
 	        undo = new UndoRedoManager(textArea.getDocument());
+	        highlighter = new KeywordHighlighter(textArea, undo);
+
 	        lastModified = model.isModified();
+
 	        textArea.getDocument().addDocumentListener(new DocumentListener() {
-	            @Override public void insertUpdate(DocumentEvent e) { onEdited(); }
-	            @Override public void removeUpdate(DocumentEvent e) { onEdited(); }
-	            @Override public void changedUpdate(DocumentEvent e) { model.markModified(); onEdited(); }
+	            @Override
+	            public void insertUpdate(DocumentEvent e) {
+	                onEdited();
+	            }
+
+	            @Override
+	            public void removeUpdate(DocumentEvent e) {
+	                onEdited();
+	            }
+
+	            @Override
+	            public void changedUpdate(DocumentEvent e) {
+	            	if (highlighter.isApplying()) return;
+	                model.markModified();
+	                onEdited();
+	            }
 	        });
 	    }
 
@@ -67,8 +102,14 @@ public class EditorTab extends JPanel {
 	    public JTextPane getTextArea() { return textArea; }
 	    public DocumentModel getDocumentModel() { return model; }
 	    public UndoRedoManager getUndoManager() { return undo; }
+	    public LineNumberPanel getLineNumbers() {
+	        return lineNumbers;
+	    }
 	    public void setWordWrap(boolean enabled) { /* JTextPane tự wrap theo chiều rộng */ }
-
+	    
+	    public void setSyntaxHighlight(boolean enabled) { highlighter.setEnabled(enabled); }
+	    public boolean isSyntaxHighlight() { return highlighter.isEnabled(); }
+	    
 	    public void setDarkTheme(boolean enabled) {
 	        darkTheme = enabled;
 	        Color bg = enabled ? new Color(36,42,36) : new Color(250,252,247);
@@ -80,6 +121,7 @@ public class EditorTab extends JPanel {
 	            pane.getViewport().setBackground(bg); pane.setBackground(bg);
 	            if (pane.getRowHeader() != null) pane.getRowHeader().setBackground(enabled ? new Color(42,48,42) : new Color(232,240,226));
 	        }
+	        highlighter.setDarkMode(enabled);
 	    }
 
 	    public void changeFontSize(int delta) { setEditorFontSize(Math.max(8, Math.min(40, editorFontSize + delta))); }
