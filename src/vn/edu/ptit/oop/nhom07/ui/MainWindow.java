@@ -54,6 +54,7 @@ public class MainWindow extends BaseWindow {
     private FindReplaceDialog findReplaceDialog;
     private boolean darkTheme = false;
     private boolean wordWrap = false;
+    private boolean syntaxHighlight = false; // My
     private JComboBox<String> fontCombo;
     private JComboBox<Integer> fontSizeCombo;
     private RecentFilesManager recent; // My
@@ -104,6 +105,13 @@ public class MainWindow extends BaseWindow {
         JCheckBoxMenuItem darkItem = new JCheckBoxMenuItem("Dark theme");
         darkItem.addActionListener(e -> { darkTheme = darkItem.isSelected(); applyEditorSettings(); });
         viewMenu.add(darkItem);
+        JCheckBoxMenuItem syntaxItem = new JCheckBoxMenuItem("Tô màu từ khóa Java");
+        syntaxItem.addActionListener(e -> {
+            syntaxHighlight = syntaxItem.isSelected();
+            applyEditorSettings();
+            setStatus(syntaxHighlight ? "Tô màu từ khóa Java: Bật" : "Tô màu từ khóa Java: Tắt");
+        });
+        viewMenu.add(syntaxItem);
         viewMenu.addSeparator();
         viewMenu.add(menuItem("Phóng to chữ", KeyEvent.VK_PLUS, InputEvent.CTRL_DOWN_MASK, e -> changeFontSize(1)));
         viewMenu.add(menuItem("Thu nhỏ chữ", KeyEvent.VK_MINUS, InputEvent.CTRL_DOWN_MASK, e -> changeFontSize(-1)));
@@ -207,6 +215,7 @@ public class MainWindow extends BaseWindow {
             EditorTab tab = (EditorTab) tabs.getComponentAt(i);
             tab.setWordWrap(wordWrap);
             tab.setDarkTheme(darkTheme);
+            tab.setSyntaxHighlight(syntaxHighlight);
         }
     }
 
@@ -472,6 +481,7 @@ public class MainWindow extends BaseWindow {
         tab.getTextArea().requestFocusInWindow();
         tab.setWordWrap(wordWrap);
         tab.setDarkTheme(darkTheme);
+        tab.setSyntaxHighlight(syntaxHighlight);
         tab.getTextArea().addCaretListener(e -> {
             int pos = e.getDot();
             try {
