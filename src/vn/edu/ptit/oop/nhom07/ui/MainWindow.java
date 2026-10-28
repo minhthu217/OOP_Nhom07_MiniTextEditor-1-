@@ -1,6 +1,7 @@
 package vn.edu.ptit.oop.nhom07.ui;
 
 import java.awt.BorderLayout;
+
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
@@ -33,6 +34,15 @@ import vn.edu.ptit.oop.nhom07.ui.dialogs.AboutDialog;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.CloseConfirmation;
 import vn.edu.ptit.oop.nhom07.ui.dialogs.FindReplaceDialog;
 import vn.edu.ptit.oop.nhom07.ui.panels.EditorTab;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.util.List;
+import javax.swing.JCheckBoxMenuItem;
+
+import vn.edu.ptit.oop.nhom07.service.RecentFilesManager;
 public class MainWindow extends BaseWindow {
 	
 	private JTabbedPane tabs;            // KHÔNG viết "= new ..." ở đây
@@ -46,6 +56,8 @@ public class MainWindow extends BaseWindow {
     private boolean wordWrap = false;
     private JComboBox<String> fontCombo;
     private JComboBox<Integer> fontSizeCombo;
+    private RecentFilesManager recent; // My
+    private JMenu recentMenu;
     
     public MainWindow() {
         super("Nhóm 07 – Mini Text Editor", 1100, 700);
@@ -68,6 +80,7 @@ public class MainWindow extends BaseWindow {
         tabs.addChangeListener(e -> onTabChanged());
         add(tabs, BorderLayout.CENTER);
 
+        recent = new RecentFilesManager();
         buildFileMenu();
         buildEditMenu();
         buildToolBar();
@@ -113,6 +126,9 @@ public class MainWindow extends BaseWindow {
         fileMenu.insert(menuItem("Save As...", KeyEvent.VK_S,
                 InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK, e -> saveCurrentAs()), pos++);
         fileMenu.insert(menuItem("Close Tab", KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK, e -> closeCurrentTab()), pos++);
+        recentMenu = new JMenu("Recent Files");
+        fileMenu.insert(recentMenu, pos++);
+        refreshRecentMenu();
         fileMenu.insertSeparator(pos);
     }
 
@@ -336,6 +352,8 @@ public class MainWindow extends BaseWindow {
             protected void done() {                          // chạy trên EDT
                 try {
                     addTab(tabFactory.createFromFile(path, get()));
+                    recent.add(path);
+                    refreshRecentMenu();
                     setStatus("Đã mở " + path.getFileName());
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
@@ -379,25 +397,36 @@ public class MainWindow extends BaseWindow {
         return writeTo(tab, path);
     }
 
+
     private boolean writeTo(EditorTab tab, Path path) {
-        try {
-            if (path.getFileName().toString().toLowerCase(java.util.Locale.ROOT).endsWith(".rtf")) {
-                tab.saveRtf(path);
-            } else {
-                tab.getDocumentModel().setContent(tab.getTextArea().getText());
-                fileService.write(tab.getDocumentModel(), path);
-            }
-            refreshTitle(tab);
-            setStatus("Đã lưu " + path.getFileName());
-            return true;
-        } catch (DocumentIOException ex) {
-            showError(ex);
-            return false;
-        } catch (java.io.IOException ex) {
-            showError(ex);
-            return false;
-        }
-    }
+    	try {
+    		if (path.getFileName().toString()
+    				.toLowerCase(java.util.Locale.ROOT)
+    				.endsWith(".rtf")) {
+    			tab.saveRtf(path);
+    		} else {
+    			tab.getDocumentModel()
+    			.setContent(tab.getTextArea().getText());
+
+    			fileService.write(tab.getDocumentModel(), path);
+    		}
+
+    		recent.add(path);
+    		refreshRecentMenu();
+
+    		refreshTitle(tab);
+    		setStatus("Đã lưu " + path.getFileName());
+    		return true;
+
+    	} catch (DocumentIOException ex) {
+    		showError(ex);
+    		return false;
+    	} catch (java.io.IOException ex) {
+    		showError(ex);
+    		return false;
+    	}
+}
+
 
     // ------------------------------------------------------------------ Close tab / thoát
 
@@ -473,7 +502,7 @@ public class MainWindow extends BaseWindow {
     private void showError(Throwable cause) {
         JOptionPane.showMessageDialog(this, cause.getMessage(), "Lỗi tệp", JOptionPane.ERROR_MESSAGE);
     }
-
+    
     @Override
     protected void showAbout() {
         new AboutDialog(this).setVisible(true);              // gọi đa hình từ menu Help ▸ About
@@ -489,4 +518,41 @@ public class MainWindow extends BaseWindow {
         statsWindow.setVisible(true);
         statsWindow.toFront();
     }
+    
+    private void refreshRecentMenu() {
+        recentMenu.removeAll();
+        List<Path> list = recent.getFiles();               // import java.util.List
+        if (list.isEmpty()) {
+            JMenuItem empty = new JMenuItem("(Trống)");
+            empty.setEnabled(false);
+            recentMenu.add(empty);
+            return;
+        }
+        int n = 1;
+        for (Path p : list) {
+            JMenuItem item = new JMenuItem((n++) + ". " + p.getFileName());
+            item.setToolTipText(p.toString());
+            item.addActionListener(e -> openRecent(p));
+            recentMenu.add(item);
+        }
+        recentMenu.addSeparator();
+        JMenuItem clear = new JMenuItem("Xóa danh sách");
+        clear.addActionListener(e -> { recent.clear(); refreshRecentMenu(); });
+        recentMenu.add(clear);
+    }
+
+    private void openRecent(Path p) {
+        if (!Files.exists(p)) {                            // tệp đã bị xóa/di chuyển
+            JOptionPane.showMessageDialog(this, "Tệp không còn tồn tại:\n" + p,
+                    "Lỗi", JOptionPane.ERROR_MESSAGE);
+            recent.remove(p);
+            refreshRecentMenu();
+            return;
+        }
+        openPath(p);
+    }
+    
 }
+
+
+    
